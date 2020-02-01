@@ -1,0 +1,340 @@
+import { Head, Appear, Image, Notes, themes } from 'mdx-deck';
+
+export const theme = themes.yellow;
+
+### cypress 
+a better(er) way to write tests
+
+<Notes>
+this is a high concept talk
+
+i'll be discussing the benefits of using cypress over other libraries like selenium and the suite of webdriver based-tools.
+
+i'll also be showcasing some features of cypress that'll make our testing lives easier.
+</Notes>
+
+---
+
+### what this talk is not about...
+<ul>
+    <Appear>
+        <li>not about testing strategies</li>
+        <li>writing unit tests</li>
+        <li>writing integration tests</li>
+    </Appear>
+</ul>
+
+<Notes>
+I will not be talking about how we should go about out testing strategies. what types of tests we should run in CI, or visual testings, or avoiding implementation tests.
+
+I will not be discussing writing unit tests
+
+nor will I discuss writing integration tests
+</Notes>
+
+---
+
+### i will be talking about...
+
+<ul>
+    <Appear>
+        <li>what cypress is</li>
+        <li>my experience training, teaching, and using cypress</li>
+        <li>why selenium is bad</li>
+    </Appear>
+</ul>
+
+<Notes>
+i was first exposed to cypress in 2016. it's a great tool and hopefully you'll understand why by the end 
+
+at my previous job at comcast. I was the subject domain expert in all things cypress. I taught it to 80 engineers while at comcast and successfully implemented it within 3 different orgs across 100 different applications.
+
+i've used selenium in some capacity for the last 8 years. it is poor way of writing tests that end up costing more, in both hours work and money maintaining, and relies of inefficient techniques for e2e testing.
+
+so on-ward to the next slide
+</Notes>
+
+---
+
+### first thing first
+
+let's briefly talk about selenium
+
+<Notes>
+selenium is based on the webdriver spec.
+
+if you arent family with the webdriver spec, it's an open specification for all browsers to abide by.
+
+it dictates a standard for how a browser behavior regarding user interactions. for example, that click events should be uniform.
+
+the problem with this is that many browser dont abide by this standard. there are still long running issues between click events using anchor tags versus buttons on firefox and chrome.
+
+and now you have browsers with large market share implementing whatever they want (cough chrome)
+
+let's go onward to the typical selenium patterns
+</Notes>
+
+---
+
+<Image src='imgs/page-object.svg' size='45%' />
+
+<Notes>
+page objects!
+
+page objects are a common pattern to capture the interactions on a webpage.
+
+you create a class and add various properties to have a uniform interaction with the page
+
+there are some issues with the approach. (next slide)
+</Notes>
+
+---
+
+<Image src='imgs/demo-project.png' size='60%' />
+
+<Notes>
+here's what the page object mapped toward.
+
+this is a demo app that shows movies with their title, synopsis, and sweet looking poster art
+
+so we have a page object that works and we have some tests that run. then we make some changes to our app.
+
+makes me this (click next slide)
+</Notes>
+
+---
+
+<Image src='imgs/demo-project.png' size='60%' />
+
+<Notes>
+so what changed? can you tell? (hold for guessing)
+
+that's right, the HTML. instead of anchor elements we used buttons, instead of divs we used paragraphs or other semantic elements.
+
+now our previous page object is now redundant. this cost in constantly maintaining massive page objects becomes too costly. you end of with a team of engineers whose sole job is to constantly catch up and hope:
+
+1 style changes never occur
+2 user flow never changes
+3 nothing never gets added breaking our css or xml tree
+
+how does this make me feel? (go to next slide)
+</Notes>
+
+---
+
+<Image src='imgs/michael-scott-no.gif' size='50%' />
+
+<Notes>
+delirious
+
+there's a tremendous costs in maintaining and writing selenium tests. rather having parity between development and testing, there is a constant race to just initially catch up.
+
+projects are never static, they constantly change. new requirements are a given and how our app looks like and behaves today is no gurantee that our tests will stay the same.
+
+no now let me introduce cypress (next slide)
+</Notes>
+
+---
+
+### what is cypress?
+
+<Notes>
+cypress is a free open source, MIT licensed library for writing E2E tests.
+
+cypress spawns and drives the browser manually like you do in development
+
+cypress is most often compared to selenium or webdriver, but it's not built off either one.
+
+cypress makes it easy to write, debug quality tests in a way you may have never before.
+
+what does cypress look like? (next slide)
+</Notes>
+
+---
+
+<Image src='imgs/ex-cy.gif' size='75%' />
+
+<Notes>
+this is a demo app called conduit. you can register accounts, make/edit/delete posts, follow users. it's a medium clone.
+
+what's running is the cypress test runner. as you can see see our specs on the left side and our app running on the right side.
+
+this is an electron app that runs an instance of chrome giving us access to web apis we normally use in development.
+
+what we are seeing is a single view tested in isolation, let's take a closer look (next slide)
+</Notes>
+
+---
+
+<Image src='imgs/new-post-test.svg' size='50%' />
+
+<Notes>
+cypress uses mocha assertions, the syntax is similar as jasmine or jest
+
+in our beforeEach statement is the real magic are the custom commands you are seeing.
+
+task, registerUserIfNeeded, login
+
+this will play into our testing strategy (next slide)
+</Notes>
+
+---
+
+### e2e strategies
+
+<ul>
+    <Appear>
+        <li>stub requests</li>
+        <li>static user</li>
+        <li>dynamic user</li>
+    </Appear>
+</ul>
+
+<Notes>
+there are generally three basic guidelines for e2e testing.
+
+stubbing requests, creating static users, or dynamic user.
+
+there is no wrong path, in fact we will likely use a collection of all three for confident testing.
+</Notes>
+
+---
+
+### stubbing requests
+<ul>
+    <Appear>
+        <li>fast, easy, flexible</li>
+        <li>no server / db</li>
+        <li>not true e2e</li>
+        <li>requires fixtures</li>
+    </Appear>
+</ul>
+
+<Notes>
+you're controlling the network
+
+stubbing out the server allows you to build out the client with ligtening speed.
+
+the tests become extremely fast as you are no longer relying on network requests.
+
+requests for data is handled by cypress, you tell the app what you want to show
+
+by setting response bodies and status codes you can test edge cases. like if a user tries to create a post but a server error occurs, how should the client look?
+
+downsides are that it's not true "e2e", since you arent hitting a real DB or API you need to create fixtures. we can accomdate this by using recording VCR techniques (record api responses and reuse them) as a workaround.
+</Notes>
+
+---
+
+### static user 
+<ul>
+    <Appear>
+        <li>real session E2E</li>
+        <li>requires server</li>
+        <li>seed the DB</li>
+        <li>shares the test state</li>
+    </Appear>
+</ul>
+
+<Notes>
+establishing a real session means are server has to be online.
+
+which means we have to seed the data for a DB. this means state between tests are shared and being mutated.
+
+if you have a test to create a new user and add posts. these tests will fail because the user has been created previously.
+
+you either have to manage this test state with various scripting or restructure what you are currently testing.
+</Notes>
+
+---
+
+### dynamic user
+<ul>
+    <Appear>
+        <li>no state mutations</li>
+        <li>flexibile / powerful</li>
+        <li>DB Setup / Teardown</li>
+        <li>slow / complex</li>
+    </Appear>
+</ul>
+
+<Notes>
+image creating a new user for each test.
+
+zero chance in sharing test state. but this approach is very cumbersome and costly.
+</Notes>
+
+---
+
+### let's poke around some code
+
+<Notes>
+Going to show some live code examples of cypress test and walk through some basic commands.
+
+(open up vscode and fucking wing it my dude)
+(show dashboard experience)
+</Notes>
+
+---
+
+### best practices
+<Appear>
+<p>🛑 dont use the UI to build up state</p>
+<p>✅ set state directly / programmtically</p>
+
+<p>🛑 dont use page objects to share UI knowledge</p>
+<p>✅ write specs in isolation, avoid coupling</p>
+
+<p>🛑 dont limit yourself trying to act like a user</p>
+<p>✅ you have native access to everything</p>
+</Appear>
+
+<Notes>
+dont set app state.
+directly set the state. if you need to login, auth yourself with by calling the correct end point.
+if you need failure, stub the network request and return a 500
+
+this eliminates the need for page objects entirely. when you strive to test pages in isolation you gain more control and confidence.
+
+we have total access to the app thru cypress. you aren't limited to talking to a server. you can control time with `cy.clock()`, stub objects `cy.stub()`, and you can modify store `cy.window()`
+</Notes>
+
+---
+
+### what do we get with cypress
+
+<ul>
+    <Appear>
+        <li>better test tooling and experience</li>
+        <li>recorded video sessions</li>
+        <li>ability to stub network requests</li>
+        <li>sweet looking dashboard</li>
+        <li>anything your heart desires 😍</li>
+    </Appear>
+</ul>
+
+<Notes>
+__better tooling__
+TDD with a real automated browser experience. with a proper flow you could be writing hundreds of test against a single component per day. with a proper flow you could be writing hundreds of test against a single component per day
+
+same browser tools (user agent, cookies, web APIs, etc)
+
+__recorded video sessions__
+I tried rolling my own between finding appropriate open source ffmpeg libraries and encoding video. it's way easier to use someone elses implementation.
+
+__stubbing network requests__
+talk about comcast dev environment and the inability to share DBs or properly plan for API responses.
+
+__dashboard__
+showcase dashboard
+</Notes>
+
+---
+
+<Image src='imgs/maria-kondo-joy-cypress.jpg' size='50%' />
+
+<Notes>
+who's here familiar with maria kondo?
+
+(end of talk)
+</Notes>
