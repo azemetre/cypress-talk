@@ -9,6 +9,6 @@
   "author": "Aaron Zemetres",
   "license": "MIT",
   "dependencies": {
-    "mdx-deck": "2.5.1"
+    "mdx-deck": "4.1.1"
   }
 }
